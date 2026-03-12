@@ -201,3 +201,52 @@ fn file_not_found_error() {
     assert!(stderr.contains("mdcli:"));
     assert!(stderr.contains("No such file"));
 }
+
+#[test]
+fn simple_table() {
+    let output = run_with_input("| A | B |\n|---|---|\n| c | d |\n");
+    assert!(output.status.success());
+    let out = String::from_utf8_lossy(&output.stdout);
+    // Check box-drawing borders
+    assert!(out.contains("┌"));
+    assert!(out.contains("┘"));
+    // Header row should be bold
+    assert!(out.contains("\x1b[1m"));
+    // Cell content present
+    assert!(out.contains("A"));
+    assert!(out.contains("d"));
+}
+
+#[test]
+fn table_column_widths() {
+    let output = run_with_input("| Short | X |\n|---|---|\n| Longer text | Y |\n");
+    assert!(output.status.success());
+    let out = String::from_utf8_lossy(&output.stdout);
+    let lines: Vec<&str> = out.lines().collect();
+    // Top border (first line) and bottom border (last non-empty line) should have same length
+    let top = lines.first().unwrap();
+    let bottom = lines.iter().rev().find(|l| !l.is_empty()).unwrap();
+    assert!(top.starts_with('┌'));
+    assert!(bottom.starts_with('└'));
+    assert_eq!(top.len(), bottom.len());
+}
+
+#[test]
+fn table_right_alignment() {
+    let output = run_with_input("| N |\n|--:|\n| x |\n| longer |\n");
+    assert!(output.status.success());
+    let out = String::from_utf8_lossy(&output.stdout);
+    // "x" should be right-padded with spaces on the left
+    // Find the data row with "x" - it should have leading spaces
+    let x_line = out
+        .lines()
+        .find(|l| l.contains("x") && l.contains("│"))
+        .unwrap();
+    let cell_content = x_line.split('│').nth(1).unwrap();
+    // Should have leading spaces for right alignment
+    assert!(
+        cell_content.starts_with("  "),
+        "expected right-aligned padding, got: {:?}",
+        cell_content
+    );
+}
