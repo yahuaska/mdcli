@@ -84,3 +84,84 @@ fn paragraph_separation() {
         "first\n\nsecond\n\n"
     );
 }
+
+#[test]
+fn fenced_code_block() {
+    let output = run_with_input("```\nhello world\n```\n");
+    assert!(output.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "\x1b[2mhello world\n\x1b[0m\n\n"
+    );
+}
+
+#[test]
+fn fenced_code_block_with_language() {
+    let output = run_with_input("```rust\nfn main() {}\n```\n");
+    assert!(output.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "\x1b[2mfn main() {}\n\x1b[0m\n\n"
+    );
+}
+
+#[test]
+fn code_block_multiline() {
+    let output = run_with_input("```\nline1\nline2\n```\n");
+    assert!(output.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "\x1b[2mline1\nline2\n\x1b[0m\n\n"
+    );
+}
+
+#[test]
+fn unordered_list() {
+    let output = run_with_input("* first\n* second\n");
+    assert!(output.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "\u{2022} first\n\u{2022} second\n\n"
+    );
+}
+
+#[test]
+fn ordered_list() {
+    let output = run_with_input("1. first\n2. second\n");
+    assert!(output.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "1. first\n2. second\n\n"
+    );
+}
+
+#[test]
+fn link() {
+    let output = run_with_input("[click here](https://example.com)\n");
+    assert!(output.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "\x1b[4mclick here\x1b[0m (https://example.com)\n\n"
+    );
+}
+
+#[test]
+fn image_alt_text() {
+    let output = run_with_input("![diagram](pic.png)\n");
+    assert!(output.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "\x1b[2m[diagram]\x1b[0m\n\n"
+    );
+}
+
+#[test]
+fn heading_then_list_spacing() {
+    let output = run_with_input("## Title\n* item\n");
+    assert!(output.status.success());
+    let out = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        out.contains("\x1b[0m\n\n\u{2022}"),
+        "heading should have blank line before list"
+    );
+}
