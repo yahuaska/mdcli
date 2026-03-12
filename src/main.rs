@@ -4,8 +4,22 @@ use std::process::{Command, Stdio};
 mod render;
 
 fn main() {
-    let mut input = String::new();
-    io::stdin().read_to_string(&mut input).unwrap();
+    let args: Vec<String> = std::env::args().skip(1).collect();
+
+    let input = if args.is_empty() {
+        let mut buf = String::new();
+        io::stdin().read_to_string(&mut buf).unwrap();
+        buf
+    } else {
+        let path = &args[0];
+        match std::fs::read_to_string(path) {
+            Ok(content) => content,
+            Err(e) => {
+                eprintln!("mdcli: {}: {}", path, e);
+                std::process::exit(1);
+            }
+        }
+    };
 
     let mut rendered = Vec::new();
     render::render(&input, &mut rendered).unwrap();

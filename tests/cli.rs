@@ -1,6 +1,16 @@
 use std::io::Write;
 use std::process::{Command, Output};
 
+fn run_with_file(path: &str) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_mdcli"))
+        .arg(path)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .and_then(|child| child.wait_with_output())
+        .unwrap()
+}
+
 fn run_with_input(input: &str) -> Output {
     Command::new(env!("CARGO_BIN_EXE_mdcli"))
         .stdin(std::process::Stdio::piped())
@@ -164,4 +174,30 @@ fn heading_then_list_spacing() {
         out.contains("\x1b[0m\n\n\u{2022}"),
         "heading should have blank line before list"
     );
+}
+
+#[test]
+fn read_file_argument() {
+    let dir = std::env::temp_dir().join("mdcli_test_read_file");
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("test.md");
+    std::fs::write(&file, "# Hello\n").unwrap();
+
+    let output = run_with_file(file.to_str().unwrap());
+    assert!(output.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        "\x1b[1;97mHello\x1b[0m\n\n"
+    );
+
+    std::fs::remove_dir_all(&dir).unwrap();
+}
+
+#[test]
+fn file_not_found_error() {
+    let output = run_with_file("/tmp/mdcli_nonexistent_file.md");
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("mdcli:"));
+    assert!(stderr.contains("No such file"));
 }
