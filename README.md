@@ -1,14 +1,6 @@
-```
-                 _      _ _
-  _ __ ___   __| | ___| (_)
- | '_ ` _ \ / _` |/ __| | |
- | | | | | | (_| | (__| | |
- |_| |_| |_|\__,_|\___|_|_|
-```
-
-**Markdown, but in your terminal. Beautifully.**
-
----
+<p align="center">
+  <img src="banner.svg" alt="mdcli — Markdown in your terminal" width="700"/>
+</p>
 
 A fast, zero-config CLI tool that renders Markdown right where you live — your terminal. No browser, no preview pane, no nonsense. Just gorgeous, readable Markdown with full Unicode box-drawing tables, ANSI colors, and automatic paging.
 
